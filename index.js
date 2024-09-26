@@ -249,6 +249,44 @@ app.delete('/carts/:userId/products/:productId', async (req, res) => {
   }
 });
 
+app.post("/carts/:userId/products/:productId/moveToWishlist", async(req, res) => {
+  const  { userId, productId } = req.params;
+  // const { productId } = req.body;
+   try {
+    const cart = await Cart.findOne({ userId });
+    if(!userId) {
+      return res.status(404).json({ error: "Cart not found.."});
+    }
+
+    const productIndex = cart.products.findIndex((item) => item.productId.toString() === productId);
+    if(productIndex === -1){
+      return res.status(404).json({ error: "Product not found in cart."})
+    }
+    const product = cart.products[productIndex];
+
+    let wishlist = await Whislist.findOne({ userId });
+    if(!wishlist) {
+      wishlist = new Whislist({ userId, products: []});
+    }
+
+    const existingProductInWishlist = wishlist.products.find(item => item.productId.toString() === productId);
+    if(existingProductInWishlist) {
+      wishlist.products
+    }else {
+      wishlist.products.push({ productId });
+    }
+
+    cart.products.splice(productIndex, 1);
+
+    await cart.save();
+    await wishlist.save();
+    res.status(200).json({ message: "Product moved to the Wishlist.", wishlist, cart});
+
+  }catch (error){
+    res.status(500).json({ error: "Internal server error", error: error.message});
+    }
+  });
+
 // Whislist
 app.get("/whishlist/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -364,6 +402,7 @@ app.delete("/address/:addressId", async (req, res) => {
     res.status(500).json({ error: "Internal server error", error: error.message });
   }
 });
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
