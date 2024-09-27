@@ -343,6 +343,46 @@ app.delete("/whishlist/:userId/products/:productId", async (req, res) => {
   }
 });
 
+app.post("/whishlist/:userId/products/:productId/addToCart", async(req, res) => {
+
+  const  { userId, productId } = req.params;
+  try {
+    const whishList = await Whislist.findOne({ userId });
+    if(!whishList){
+      return res.status(404).json({ error: "Wishlist not found..."});
+
+    }
+
+    const productIndex = whishList.products.findIndex(
+      (item) => item.productId.toString() === productId);
+    if(productIndex === -1){
+      return res.status(404).json({ error: "Product not found in the wishlist." });
+    }
+    // const product = whishList.products[productIndex];
+
+    let cart = await Cart.findOne({ userId });
+    if(!cart){
+      cart = new Cart({ userId, products:[]});
+    }
+
+    const existingProductInCart = cart.products.find(item => item.productId.toString() === productId);
+    if(existingProductInCart){
+       existingProductInCart.quantity += 1 ;
+    }else {
+      cart.products.push({ productId, quantity: 1 });
+    }
+
+    const savedCart = await cart.save();
+    whishList.products = whishList.products.filter((item) => item.productId.toString() !== productId);
+    await whishList.save();
+
+    res.status(201).json({ message: "Product added to cart successfully.", cart: savedCart });
+  }catch(error){
+    res.status(500).json({ error: "Internal server error", error: error.message});
+
+  }
+})
+
 // Address
 app.post("/users/:userId/address", async (req, res) => {
   const { userId } = req.params;
