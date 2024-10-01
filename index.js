@@ -111,14 +111,33 @@ app.delete("/products/:id", async (req, res) => {
 });
 
 // user
-app.post('/users', async(req, res) => {
+// app.post('/users', async(req, res) => {
+//   try {
+//     const user = new User(req.body);
+//     const savedUser = await user.save();
+//     res.status(201).json({ message: "User added successfully", user: savedUser });
+//   } catch (error) {
+//     res.status(500).json({ error: "Failed to add User." });
+    
+//   }
+// });
+
+app.post('/users', async (req, res) => {
   try {
+    const { name, email, password, phoneNumber } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists." });
+    }
+
+    // Create a new user
     const user = new User(req.body);
     const savedUser = await user.save();
     res.status(201).json({ message: "User added successfully", user: savedUser });
   } catch (error) {
     res.status(500).json({ error: "Failed to add User." });
-    
   }
 });
 
@@ -136,15 +155,41 @@ app.get("/users/:userId", async (req, res) => {
 
   try {
     const user = await User.findById(userId).populate({ path: 'cart.products.productId', model: 'Product' });
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     res.status(200).json(user);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// app.put('/users/:id', async (req, res) => {
+//   const userId = req.params.id;
+
+//   try {
+//     const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true });
+//     if (!updatedUser) {
+//       return res.status(404).json({ message: "User not found." });
+//     }
+//     res.status(200).json({ message: "User updated successfully", user: updatedUser });
+//   } catch (error) {
+//     res.status(500).json({ error: "Failed to update User." });
+//   }
+// });
+
+app.delete('/users/:userId', async (req, res) => {
+  const {userId} = req.params;
+
+  try {
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.status(200).json({ message: "User deleted successfully." });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete User." , error: error});
   }
 });
 
