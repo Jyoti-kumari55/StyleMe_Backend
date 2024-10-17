@@ -1,7 +1,7 @@
 {
   "name": "project-1_backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Ecommerce Website using React, Bootstrap, Redux, Monngodb...",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

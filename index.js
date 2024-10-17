@@ -15,6 +15,7 @@ const corsOptions = {
   credentials: true,
   optionSuccessStatus: 200,
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 
@@ -491,5 +492,5 @@ app.delete("/address/:addressId", async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Server is runnong on ${PORT}.`)
+  console.log(`Server is running on ${PORT}.`)
 });
