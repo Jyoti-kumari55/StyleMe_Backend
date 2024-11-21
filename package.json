@@ -4,6 +4,7 @@
   "description": "Ecommerce Website using React, Bootstrap, Redux, Monngodb...",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jyoti",
@@ -12,6 +13,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "mongoose": "^8.6.3"
+    "mongoose": "^8.6.3",
+    "nodemon": "^3.1.7"
   }
 }

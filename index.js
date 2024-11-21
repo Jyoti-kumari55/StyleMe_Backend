@@ -112,6 +112,7 @@ app.delete("/products/:id", async (req, res) => {
 });
 
 // user
+
 // app.post('/users', async(req, res) => {
 //   try {
 //     const user = new User(req.body);
@@ -138,7 +139,8 @@ app.post('/users', async (req, res) => {
     const savedUser = await user.save();
     res.status(201).json({ message: "User added successfully", user: savedUser });
   } catch (error) {
-    res.status(500).json({ error: "Failed to add User." });
+    console.error(error);
+    res.status(500).json({ error: "Failed to add User.", error: error.message });
   }
 });
 
@@ -492,5 +494,5 @@ app.delete("/address/:addressId", async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on ${PORT}.`)
+  console.log(`Server of SyleMe is running on ${PORT}.`)
 });
