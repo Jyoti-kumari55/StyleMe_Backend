@@ -335,6 +335,57 @@ app.post("/carts/:userId/products/:productId/moveToWishlist", async(req, res) =>
     }
   });
 
+app.post('/carts/:userId/products/:productId/increaseItem', async(req, res) => {
+  const { userId, productId} = req.params;
+  try {
+
+    const cart = await Cart.findOne({ userId });
+     if(!cart) {
+      return res.status(404).json({error: "Cart not found for this user." })
+     }
+
+    const existingProduct = cart.products.find((product => product.productId.toString() === productId));
+    if(existingProduct) {
+      existingProduct.quantity += 1;
+      const updatedCart = await cart.save();
+      res.status(200).json({ message: "Product quantity has been increased.", cart: updatedCart});
+    }else {
+      res.status(404).json({ error: "Product not found in the cart."})
+    }
+     
+  } catch (error) {
+    res.status(500).json({ error: "Failed to increase the quantity of the product.", details: error.message});
+    
+  }
+})
+
+app.post('/carts/:userId/products/:productId/decreaseItem', async(req, res) => {
+  const { userId, productId} = req.params;
+  try {
+    const cart = await Cart.findOne({ userId });
+     if(!cart) {
+      return res.status(404).json({error: "Cart not found for this user." })
+     }
+
+    const existingProduct = cart.products.find((product => product.productId.toString() === productId));    
+    if(existingProduct) {
+      if(existingProduct.quantity > 1) {
+       existingProduct.quantity -= 1;
+      } else {
+       cart.products = cart.products.filter((product) => product.productId.toString() !== productId);
+     }
+      const updatedCart = await cart.save();
+      return res.status(200).json({ message: "Product quantity has been decreased.", cart: updatedCart});
+    
+    }else {
+      return res.status(404).json({ error: "Product not found in the cart." });
+    }
+     
+  } catch (error) {
+    res.status(500).json({ error: "Failed to increase the quantity of the product.", details: error.message});
+    
+  }
+})
 // Whislist
 app.get("/whishlist/:userId", async (req, res) => {
   const { userId } = req.params;
