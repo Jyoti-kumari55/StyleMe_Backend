@@ -5,8 +5,8 @@ const User = require('./models/userModel');
 const Whislist = require('./models/whislistModel');
 const Address = require('./models/addressModel');
 
-
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const cors = require("cors");
 const app = express();
 
@@ -103,7 +103,7 @@ app.delete("/products/:id", async (req, res) => {
       .status(200)
       .json({
         message: "Product deleted successfully",
-        student: deletedProduct,
+        product: deletedProduct,
       });
   } catch (error) {
     console.error(error);
@@ -134,13 +134,38 @@ app.post('/users', async (req, res) => {
       return res.status(400).json({ message: "User already exists." });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create a new user
-    const user = new User(req.body);
+    // const user = new User(req.body);
+    const user = new User({ name, email, password: hashedPassword, phoneNumber });
     const savedUser = await user.save();
     res.status(201).json({ message: "User added successfully", user: savedUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to add User.", error: error.message });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: "Email not found." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    res.status(200).json({ message: "Login successful", user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -167,20 +192,6 @@ app.get("/users/:userId", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-// app.put('/users/:id', async (req, res) => {
-//   const userId = req.params.id;
-
-//   try {
-//     const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true });
-//     if (!updatedUser) {
-//       return res.status(404).json({ message: "User not found." });
-//     }
-//     res.status(200).json({ message: "User updated successfully", user: updatedUser });
-//   } catch (error) {
-//     res.status(500).json({ error: "Failed to update User." });
-//   }
-// });
 
 app.delete('/users/:userId', async (req, res) => {
   const {userId} = req.params;
@@ -211,7 +222,24 @@ app.put("/users/:userId", async (req, res) => {
   }
 })
 
+// app.put('/users/:id', async (req, res) => {
+//   const userId = req.params.id;
+
+//   try {
+//     const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true });
+//     if (!updatedUser) {
+//       return res.status(404).json({ message: "User not found." });
+//     }
+//     res.status(200).json({ message: "User updated successfully", user: updatedUser });
+//   } catch (error) {
+//     res.status(500).json({ error: "Failed to update User." });
+//   }
+// });
+
+
+
 // cart
+
 app.post('/carts/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
@@ -386,6 +414,35 @@ app.post('/carts/:userId/products/:productId/decreaseItem', async(req, res) => {
     
   }
 })
+
+app.put("/carts/:userId/products/:productId/size", async (req, res) => {
+  const { userId, productId } = req.params;
+  const { size } = req.body;
+  if(!size) {
+    return res.status(400).json({ error: "Size is required."});
+  }
+
+  try {
+    const cart = await Cart.findOne({ userId });
+   const product = cart.products.find((item) => item.productId.toString() === productId);
+   if(!product) {
+    return res.status(404).json({ error: "Product not found in the cart." });
+   }
+   product.size = size;
+
+   const updatedCart = await cart.save();
+
+    res.status(200).json({
+      message: "Product size updated successfully.",
+      cart: updatedCart,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error", details: error.message });
+  
+  }
+});
+
 // Whislist
 app.get("/whishlist/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -542,6 +599,18 @@ app.delete("/address/:addressId", async (req, res) => {
   }
 });
 
+app.get("/addresses", async (req, res) => {
+  try {
+    const allAddresses = await Address.find();
+    if (allAddresses.length === 0) {
+      return res.status(404).json({ error: "No addresses found" });
+    }
+    res.status(200).json({message: "Users default Address.", addresses: allAddresses});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error", error: error.message });
+  }
+});
 
 const PORT = 3000;
 app.listen(PORT, () => {
