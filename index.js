@@ -279,11 +279,15 @@ app.post("/carts/:userId/products", async (req, res) => {
 
 app.get("/carts/:userId", async (req, res) => {
   const { userId } = req.params;
+  console.log("User ID received:", userId); 
   try {
-    const cart = await Cart.findOne({ userId }).populate({ path: 'products.productId', model: 'Product' });
+    let cart = await Cart.findOne({ userId }).populate({ path: 'products.productId', model: 'Product' });
     if(!cart) {
-      return res.status(404).json({ error: "Cart not found" });
+      console.log("Cart not found for userId:", userId); 
+      cart = await Cart.create({ userId, products: [] });
+      // return res.status(404).json({ error: "Cart not found" });
     }
+    console.log("Cart found:", cart); 
     res.status(200).json(cart);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
